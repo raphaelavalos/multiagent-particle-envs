@@ -21,7 +21,7 @@ class RLlibMultiAgentParticleEnv(rllib.MultiAgentEnv):
             mpe_args (dict): Arguments to pass to the underlying
                 make_env.make_env instance.
         Examples:
-            >>> from rllib_env import RLlibMultiAgentParticleEnv
+            >>> from multiagent.rllibwrapper import RLlibMultiAgentParticleEnv
             >>> env = RLlibMultiAgentParticleEnv(scenario_name="simple_reference")
             >>> print(env.reset())
         """
