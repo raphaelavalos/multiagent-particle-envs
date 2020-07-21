@@ -71,6 +71,9 @@ class RLlibMultiAgentParticleEnv(rllib.MultiAgentEnv):
 
         return obs_dict, rew_dict, done_dict, info_dict
 
+    def seed(self, seed):
+        self._env.seed(seed)
+
     def render(self, mode='human'):
         time.sleep(0.05)
         self._env.render(mode=mode)
