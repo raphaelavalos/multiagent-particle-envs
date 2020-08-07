@@ -76,7 +76,7 @@ class RLlibMultiAgentParticleEnv(rllib.MultiAgentEnv):
 
     def render(self, mode='human'):
         time.sleep(0.05)
-        self._env.render(mode=mode)
+        return self._env.render(mode=mode)
 
     def _make_dict(self, values):
         return dict(zip(self.agent_ids, values))

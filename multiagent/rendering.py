@@ -32,12 +32,13 @@ RAD2DEG = 57.29577951308232
 def get_display(spec):
     """Convert a display specification (such as :0) into an actual Display
     object.
-
     Pyglet only supports multiple Displays on Linux.
     """
     if spec is None:
-        return None
-    elif isinstance(spec, six.string_types):
+        return pyglet.canvas.get_display()
+        # returns already available pyglet_display,
+        # if there is no pyglet display available then it creates one
+    elif isinstance(spec, str):
         return pyglet.canvas.Display(spec)
     else:
         raise error.Error('Invalid display specification: {}. (Must be a string like :0 or None.)'.format(spec))
@@ -98,7 +99,7 @@ class Viewer(object):
         if return_rgb_array:
             buffer = pyglet.image.get_buffer_manager().get_color_buffer()
             image_data = buffer.get_image_data()
-            arr = np.fromstring(image_data.data, dtype=np.uint8, sep='')
+            arr = np.fromstring(image_data.get_data(), dtype=np.uint8, sep='')
             # In https://github.com/openai/gym-http-api/issues/2, we
             # discovered that someone using Xmonad on Arch was having
             # a window of size 598 x 398, though a 600 x 400 window
