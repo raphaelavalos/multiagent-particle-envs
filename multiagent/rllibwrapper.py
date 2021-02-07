@@ -4,7 +4,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from gym.spaces import Discrete, Box, MultiDiscrete
+import gym
+from gym.spaces import Discrete, Box, MultiDiscrete, Dict
 from ray import rllib
 from make_env import make_env
 
@@ -80,4 +81,45 @@ class RLlibMultiAgentParticleEnv(rllib.MultiAgentEnv):
 
     def _make_dict(self, values):
         return dict(zip(self.agent_ids, values))
+
+
+class RLLibSingleAgentParticleEnv(gym.Env):
+    def __init__(self, **mpe_args):
+        self._env = make_env(**mpe_args)
+        self.num_agents = self._env.n
+        obs_shape = (self.num_agents,) + self._env.observation_space[0].shape
+        self.nbr_actions = np.prod(self._env.action_space[0].shape)
+        obs_dict = {"obs_agent_{}".format(i): obs for i, obs in enumerate(self._env.observation_space)}
+        self.observation_space = Dict({
+            **obs_dict,
+            "prev_reward": Box(low=-np.inf, high=np.inf, shape=(self.num_agents,))
+        })
+        self.action_space = Box(low=self._env.action_space[0].low.min(),
+                                high=self._env.action_space[0].high.max(),
+                                shape=(self.num_agents * self.nbr_actions,))
+
+    def _obs(self, obs, prev_reward=None):
+        obs_ = {"obs_agent_{}".format(i): obs for i, obs in enumerate(obs)}
+        if prev_reward is None:
+            prev_reward = np.zeros((self.num_agents,))
+        else:
+            prev_reward = np.array(prev_reward)
+        obs_["prev_reward"] = prev_reward
+        return obs_
+
+    def reset(self):
+        return self._obs(self._env.reset())
+
+    def step(self, action):
+        action = action.reshape((self.num_agents, self.nbr_actions))
+        action = [action[i] for i in range(self.num_agents)]
+        obs_list, rew_list, done_list, info_list = self._env.step(action)
+        obs = self._obs(obs_list, rew_list)
+        info = {"reward": rew_list, **info_list}
+        done = np.all(done_list)
+        reward = np.mean(rew_list)
+        return obs, reward, done, info
+
+    def seed(self, seed=None):
+        return self._env.seed()
 
